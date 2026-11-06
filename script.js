@@ -38,7 +38,7 @@ let unsubs = [], view = 'dashboard', chart = null;
 const lowLimit = () => +(S.settings.lowStock ?? 10);
 const log = (action, detail) => db.collection('activityLogs').add({ action, detail, at: TS() });
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').then(r => r.update()).catch(() => {});
 const setNet = () => { const e = $('#sync'); e.textContent = navigator.onLine ? 'Online' : 'Offline · changes sync later'; e.className = 'pill' + (navigator.onLine ? '' : ' off'); };
 addEventListener('online', setNet); addEventListener('offline', setNet);
 
@@ -61,7 +61,7 @@ $('#lBtn').onclick = async () => {
   $('#lErr').textContent = '';
   try { await auth.signInWithEmailAndPassword(`${u}@${LOGIN_DOMAIN}`, p); } catch (e) { $('#lErr').textContent = 'Incorrect username or password.'; }
 };
-$('#lPass').onkeydown = e => e.key === 'Enter' && $('#lBtn').click();
+$('#lPass').addEventListener('keydown', e => { if (e.key === 'Enter') $('#lBtn').click(); });
 $('#logout').onclick = () => auth.signOut();
 $('#menuBtn').onclick = () => $('#side').classList.toggle('open');
 
