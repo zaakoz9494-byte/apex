@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>APEX · X-Ray Film Billing</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1d4ed8">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<section id="login" class="login hidden">
+  <div class="login-card">
+    <div class="brand">APEX</div>
+    <p class="muted">Sign in to your billing account</p>
+    <label>Username<input id="lUser" autocomplete="username"></label>
+    <label>Password<input id="lPass" type="password" autocomplete="current-password"></label>
+    <button class="btn primary block" id="lBtn">Sign in</button>
+    <p id="lErr" class="err"></p>
+  </div>
+</section>
+
+<div id="app" class="app hidden">
+  <aside id="side">
+    <div class="brand">APEX</div>
+    <nav id="nav"></nav>
+    <button class="btn ghost" id="logout">Log out</button>
+  </aside>
+  <main>
+    <header class="top">
+      <button class="btn ghost menu" id="menuBtn">Menu</button>
+      <h1 id="title"></h1>
+      <span id="sync" class="pill">Online</span>
+    </header>
+    <div id="view"></div>
+  </main>
+</div>
+
+<div id="modal" class="modal hidden"><div class="sheet" id="sheet"></div></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.3/chart.umd.min.js"></script>
+<script src="firebase-config.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
