@@ -9,6 +9,11 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<script>
+function apexErr(m){document.body.insertAdjacentHTML('afterbegin','<pre style="padding:16px;margin:0;color:#b91c1c;white-space:pre-wrap;font:14px monospace">APEX error: '+m+'</pre>')}
+window.addEventListener('error',function(e){apexErr(e.message+' ('+String(e.filename||'').split('/').pop()+':'+e.lineno+')')});
+window.addEventListener('unhandledrejection',function(e){apexErr(e.reason&&e.reason.message||e.reason)});
+</script>
 <section id="login" class="login hidden">
   <div class="login-card">
     <div class="brand">APEX</div>
