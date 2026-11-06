@@ -20,6 +20,7 @@ window.addEventListener('unhandledrejection',function(e){apexErr(e.reason&&e.rea
     <p class="muted">Sign in to your billing account</p>
     <label>Username<input id="lUser" autocomplete="username"></label>
     <label>Password<input id="lPass" type="password" autocomplete="current-password"></label>
+    <label class="show"><input type="checkbox" onchange="document.getElementById('lPass').type=this.checked?'text':'password'"> Show password</label>
     <button class="btn primary block" id="lBtn">Sign in</button>
     <p id="lErr" class="err"></p>
   </div>
