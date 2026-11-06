@@ -111,7 +111,8 @@ function vDash() {
    <div class="panel"><h3>Low-stock notifications</h3>${tbl(['Product', 'Stock'], low.map(p => `<tr><td>${esc(p.name)} ${esc(p.size)}</td><td class="r ${p.stock < 0 ? 'neg' : ''}">${p.stock || 0}</td></tr>`), 'All products are well stocked.')}</div></div>`;
   const labels = [], data = [], d0 = new Date(); d0.setDate(1);
   for (let k = 11; k >= 0; k--) { const d = new Date(d0.getFullYear(), d0.getMonth() - k, 1), key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; labels.push(key); data.push(sum(I.filter(i => i.date.startsWith(key)), i => i.total)); }
-  if (chart) chart.destroy();
+  if (chart) { chart.destroy(); chart = null; }
+  if (typeof Chart === 'undefined') { $('#ch').insertAdjacentHTML('afterend', '<p class="muted">Chart could not be loaded (check your internet connection).</p>'); $('#ch').remove(); return; }
   chart = new Chart($('#ch'), { type: 'bar', data: { labels, datasets: [{ data, backgroundColor: '#1d4ed8', borderRadius: 4 }] }, options: { plugins: { legend: { display: false } } } });
 }
 
