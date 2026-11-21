@@ -35,6 +35,8 @@ const auth = firebase.auth(), db = firebase.firestore();
 db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
 const S = { products: [], customers: [], invoices: [], moves: [], logs: [], settings: {} };
 let unsubs = [], view = 'dashboard', chart = null;
+/* company defaults (from firebase-config.js) are used wherever Settings is left blank */
+const cfg = () => { const o = { ...(typeof COMPANY_DEFAULTS !== 'undefined' ? COMPANY_DEFAULTS : {}) }; Object.entries(S.settings || {}).forEach(([k, v]) => { if (v !== '' && v != null) o[k] = v; }); return o; };
 const lowLimit = () => +(S.settings.lowStock ?? 10);
 const log = (action, detail) => db.collection('activityLogs').add({ action, detail, at: TS() });
 
@@ -278,7 +280,7 @@ function addPay(id) {
 
 /* ---------- invoice PDF ---------- */
 function invPDF(inv) {
-  const { jsPDF } = window.jspdf, doc = new jsPDF({ unit: 'mm', format: 'a4' }), s = S.settings, B = [29, 78, 216], W = 210;
+  const { jsPDF } = window.jspdf, doc = new jsPDF({ unit: 'mm', format: 'a4' }), s = cfg(), B = [29, 78, 216], W = 210;
   let y = 14;
   if (s.logo) { try { doc.addImage(s.logo, /png/i.test(s.logo) ? 'PNG' : 'JPEG', 14, y - 4, 22, 22); } catch (e) {} }
   const x0 = s.logo ? 40 : 14;
@@ -294,7 +296,7 @@ function invPDF(inv) {
   const ca = doc.splitTextToSize(inv.address || '', 110); doc.text(ca, 14, y + 10); doc.text(inv.gstin ? 'GSTIN: ' + inv.gstin : '', 14, y + 10 + ca.length * 4);
   y += 20 + ca.length * 4;
   const f = n => R(n).toLocaleString('en-IN', { minimumFractionDigits: 2 });
-  doc.autoTable({ startY: y, head: [['Sl.', 'Product Name', 'Size', 'Qty', 'Rate', 'Amount']], body: inv.items.map((i, k) => [k + 1, i.name, i.size, i.qty, f(i.rate), f(i.amount)]), theme: 'grid', headStyles: { fillColor: B, textColor: 255 }, styles: { fontSize: 9, lineColor: [220, 224, 230] }, columnStyles: { 0: { cellWidth: 12 }, 3: { halign: 'right' }, 4: { halign: 'right' }, 5: { halign: 'right' } } });
+  doc.autoTable({ startY: y, head: [['Sl.', 'Product Name', 'Size', 'Qty', 'Rate', 'Amount']], body: inv.items.map((i, k) => [k + 1, i.name, i.size, i.qty, f(i.rate), f(i.amount)]), theme: 'grid', headStyles: { fillColor: B, textColor: 255 }, styles: { fontSize: 9, lineColor: [220, 224, 230] }, columnStyles: { 0: { cellWidth: 12 }, 3: { halign: 'right' }, 4: { halign: 'right' }, 5: { halign: 'right' } }, didParseCell: d => { if (d.section === 'head' && d.column.index >= 3) d.cell.styles.halign = 'right'; } });
   y = doc.lastAutoTable.finalY + 4;
   doc.autoTable({ startY: y, margin: { left: 110 }, body: [['Taxable Amount', f(inv.taxable)], ['CGST @ 2.5%', f(inv.cgst)], ['SGST @ 2.5%', f(inv.sgst)], ['Grand Total', f(inv.total)]], theme: 'plain', styles: { fontSize: 9.5 }, columnStyles: { 1: { halign: 'right' } }, didParseCell: d => { if (d.row.index === 3) { d.cell.styles.fontStyle = 'bold'; d.cell.styles.textColor = B; } } });
   y = doc.lastAutoTable.finalY + 8;
@@ -315,7 +317,7 @@ const invDl = id => { const i = S.invoices.find(x => x.id === id); invPDF(i).sav
 const invPrint = id => { const d = invPDF(S.invoices.find(x => x.id === id)); d.autoPrint(); window.open(d.output('bloburl')); };
 function invWA(id) {
   const i = S.invoices.find(x => x.id === id); invDl(id);
-  const t = `Hello ${i.customerName}, your invoice ${i.number} dated ${fd(i.date)} for ${money(i.total)} from ${S.settings.name || 'APEX'}. I am sending the PDF in this chat.`;
+  const t = `Hello ${i.customerName}, your invoice ${i.number} dated ${fd(i.date)} for ${money(i.total)} from ${cfg().name || 'APEX'}. I am sending the PDF in this chat.`;
   alert('The PDF has been downloaded. WhatsApp will open next: attach the downloaded file to the chat and send.');
   window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank');
 }
@@ -351,7 +353,7 @@ function vLedger() {
 }
 function stmtPDF() {
   const c = S.customers.find(x => x.id === ledgerFor), L = ledgerRows(c), { jsPDF } = window.jspdf, d = new jsPDF();
-  d.setFontSize(15).setTextColor(29, 78, 216).text(S.settings.name || 'APEX', 14, 16); d.setFontSize(10).setTextColor(40).text(`Statement of account: ${c.name}`, 14, 24).text(`Period: ${lf.from ? fd(lf.from) : 'start'} to ${lf.to ? fd(lf.to) : fd(today())}`, 14, 30);
+  d.setFontSize(15).setTextColor(29, 78, 216).text(cfg().name || 'APEX', 14, 16); d.setFontSize(10).setTextColor(40).text(`Statement of account: ${c.name}`, 14, 24).text(`Period: ${lf.from ? fd(lf.from) : 'start'} to ${lf.to ? fd(lf.to) : fd(today())}`, 14, 30);
   const f = n => R(n).toLocaleString('en-IN', { minimumFractionDigits: 2 });
   d.autoTable({ startY: 36, head: [['Date', 'Particulars', 'Ref', 'Debit', 'Credit', 'Balance']], body: [['', 'Opening balance', '', '', '', f(L.open)], ...L.rows.map(e => [fd(e.d), e.desc, e.ref, e.dr ? f(e.dr) : '', e.cr ? f(e.cr) : '', f(e.bal)]), ['', 'Closing balance', '', '', '', f(L.close)]], headStyles: { fillColor: [29, 78, 216] }, styles: { fontSize: 8.5 }, columnStyles: { 3: { halign: 'right' }, 4: { halign: 'right' }, 5: { halign: 'right' } } });
   d.save(`Statement_${safe(c.name)}_${today()}.pdf`);
@@ -393,7 +395,7 @@ function repX(kind) {
 /* ---------- activity / settings / backup ---------- */
 function vAct() { $('#view').innerHTML = `<div class="panel">${tbl(['When', 'Action', 'Details'], S.logs.map(l => `<tr><td>${tsStr(l.at)}</td><td>${esc(l.action)}</td><td>${esc(l.detail)}</td></tr>`))}</div>`; }
 function vSet() {
-  const s = S.settings, f = (i, l, v, c = '') => `<label class="${c}">${l}<input id="${i}" value="${esc(v)}"></label>`;
+  const s = cfg(), f = (i, l, v, c = '') => `<label class="${c}">${l}<input id="${i}" value="${esc(v)}"></label>`;
   $('#view').innerHTML = `<div class="panel"><h3>Company details</h3><div class="form">${f('sN', 'Company name', s.name)}${f('sM', 'Mobile number', s.mobile)}${f('sG', 'GSTIN', s.gstin)}${f('sE', 'Email', s.email)}${f('sAd', 'Address', s.address, 'full')}
   <label>Company logo<input type="file" id="sL" accept="image/png,image/jpeg"></label>${f('sLow', 'Low-stock limit (boxes)', s.lowStock ?? 10)}</div>${s.logo ? `<img src="${s.logo}" height="50" alt="logo">` : ''}
   <h3>Bank details</h3><div class="form">${f('sBA', 'Account name', s.bankAccName)}${f('sBN', 'Bank name', s.bankName)}${f('sAN', 'Account number', s.accNo)}${f('sIF', 'IFSC code', s.ifsc)}${f('sBR', 'Branch', s.branch)}</div>
