@@ -47,7 +47,8 @@ label input,label select,label textarea{font-weight:400;font-size:14px;width:100
 .login-card label.show input{width:auto}
 
 /* app layout */
-.brand{font-weight:800;font-size:22px;letter-spacing:1px}
+.brand{font-weight:800;font-size:22px;letter-spacing:1px;line-height:1.1}
+.brand small{display:block;font-weight:600;font-size:12px;letter-spacing:3px;text-transform:uppercase;opacity:.75;margin-top:3px}
 .app{display:flex;min-height:100vh}
 aside#side{width:var(--side);background:#0f172a;color:#cbd5e1;display:flex;flex-direction:column;padding:18px 12px;position:fixed;top:0;bottom:0;left:0;z-index:30;overflow-y:auto}
 aside#side .brand{color:#fff;padding:0 10px 14px}
